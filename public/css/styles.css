@@ -1,0 +1,28 @@
+.chat-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.chat-wrapper {
+  min-height: 55vh;
+}
+
+#messages {
+  max-height: 55vh;
+  font-size: 0.95rem;
+}
+
+@media (min-height: 800px) {
+  .chat-wrapper {
+    min-height: 65vh;
+  }
+
+  #messages {
+    max-height: 65vh;
+  }
+}
+
+.chat-toolbar {
+  gap: 0.5rem;
+}
+
