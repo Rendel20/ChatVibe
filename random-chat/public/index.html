@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Anonymous Random Chat</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body class="bg-light d-flex align-items-center justify-content-center vh-100">
+    <button id="theme-toggle" class="btn btn-sm btn-outline-secondary dark-toggle" type="button">
+      Dark
+    </button>
+    <main class="text-center landing-main">
+      <div class="landing-card shadow-sm p-4 p-md-5">
+        <h1 class="mb-3 landing-title">VibeChat</h1>
+        <p class="text-muted mb-4 landing-subtitle">
+          Connect instantly with a random stranger. No signup, no history, completely anonymous.
+        </p>
+        <button id="start-chat" class="btn btn-primary btn-lg px-4">
+          Start Chat
+        </button>
+      </div>
+    </main>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const startBtn = document.getElementById('start-chat');
+      const themeToggle = document.getElementById('theme-toggle');
+
+      function applyTheme(mode) {
+        if (mode === 'dark') {
+          document.body.classList.add('dark-mode');
+          themeToggle.textContent = 'Light';
+        } else {
+          document.body.classList.remove('dark-mode');
+          themeToggle.textContent = 'Dark';
+        }
+      }
+
+      (function initTheme() {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initial = stored || (prefersDark ? 'dark' : 'light');
+        applyTheme(initial);
+      })();
+
+      themeToggle.addEventListener('click', () => {
+        const next = document.body.classList.contains('dark-mode')
+          ? 'light'
+          : 'dark';
+        applyTheme(next);
+        localStorage.setItem('theme', next);
+      });
+
+      startBtn.addEventListener('click', () => {
+        window.location.href = '/chat.html';
+      });
+    </script>
+  </body>
+  </html>
+
