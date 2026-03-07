@@ -8,6 +8,7 @@ const inputEl = document.getElementById('message-input');
 const sendBtnEl = document.getElementById('send-btn');
 const skipBtnEl = document.getElementById('skip-btn');
 const reportBtnEl = document.getElementById('report-btn');
+const statusPillEl = document.getElementById('status-pill');
 const statusBadgeEl = document.getElementById('status-badge');
 
 let isConnectedToPartner = false;
@@ -16,20 +17,35 @@ function clearMessages() {
   messagesEl.innerHTML = '';
 }
 
+function showWaitingState(subtitle) {
+  messagesEl.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'waiting-state';
+  wrap.innerHTML =
+    '<div class="waiting-spinner" aria-hidden="true"></div>' +
+    '<div class="waiting-title">Finding you a partner</div>' +
+    '<div class="waiting-subtitle">' + (subtitle || 'Connecting to server and waiting for a partner...') + '</div>';
+  messagesEl.appendChild(wrap);
+}
+
 function setStatusWaiting() {
   isConnectedToPartner = false;
-  statusBadgeEl.textContent = 'Waiting';
-  statusBadgeEl.classList.remove('bg-success');
-  statusBadgeEl.classList.add('bg-secondary');
+  if (statusPillEl) {
+    statusPillEl.classList.remove('status-connected');
+    statusPillEl.classList.add('status-waiting');
+  }
+  if (statusBadgeEl) statusBadgeEl.textContent = 'Waiting';
   inputEl.disabled = true;
   sendBtnEl.disabled = true;
 }
 
 function setStatusConnected() {
   isConnectedToPartner = true;
-  statusBadgeEl.textContent = 'Connected';
-  statusBadgeEl.classList.remove('bg-secondary');
-  statusBadgeEl.classList.add('bg-success');
+  if (statusPillEl) {
+    statusPillEl.classList.remove('status-waiting');
+    statusPillEl.classList.add('status-connected');
+  }
+  if (statusBadgeEl) statusBadgeEl.textContent = 'Connected';
   inputEl.disabled = false;
   sendBtnEl.disabled = false;
   inputEl.focus();
@@ -50,7 +66,7 @@ function addIncomingMessage(text, timestamp) {
   wrapper.className = 'mb-2 message-incoming';
 
   const bubble = document.createElement('div');
-  bubble.className = 'p-2 bubble border';
+  bubble.className = 'bubble';
   bubble.textContent = text;
 
   const meta = document.createElement('div');
@@ -68,7 +84,7 @@ function addOutgoingMessage(text) {
   wrapper.className = 'mb-2 message-outgoing';
 
   const bubble = document.createElement('div');
-  bubble.className = 'p-2 bubble bg-primary text-white d-inline-block';
+  bubble.className = 'bubble';
   bubble.textContent = text;
 
   wrapper.appendChild(bubble);
@@ -78,7 +94,7 @@ function addOutgoingMessage(text) {
 
 // Initial state: waiting for a partner
 setStatusWaiting();
-addSystemMessage('Connecting to server and waiting for a partner...');
+showWaitingState('Connecting to server and waiting for a partner...');
 
 socket.on('connect', () => {
   // No-op; matchmaking is handled server-side on connection
@@ -99,19 +115,13 @@ socket.on('chat:receive', (payload) => {
 });
 
 socket.on('chat:ended', (payload) => {
-  clearMessages();
   const reason = payload && payload.reason ? payload.reason : 'ended';
-  if (reason === 'skip') {
-    addSystemMessage('Partner skipped. Looking for a new partner...');
-  } else if (reason === 'disconnect') {
-    addSystemMessage('Partner disconnected. Looking for a new partner...');
-  } else if (reason === 'banned') {
-    addSystemMessage('Your partner was removed. Looking for a new partner...');
-  } else if (reason === 'report') {
-    addSystemMessage('You reported your partner. Looking for a new partner...');
-  } else {
-    addSystemMessage('Chat ended. Looking for a new partner...');
-  }
+  let subtitle = 'Looking for a new partner...';
+  if (reason === 'skip') subtitle = 'Partner skipped. Looking for a new partner...';
+  else if (reason === 'disconnect') subtitle = 'Partner disconnected. Looking for a new partner...';
+  else if (reason === 'banned') subtitle = 'Your partner was removed. Looking for a new partner...';
+  else if (reason === 'report') subtitle = 'You reported your partner. Looking for a new partner...';
+  showWaitingState(subtitle);
   setStatusWaiting();
 });
 
@@ -123,7 +133,7 @@ socket.on('chat:rate_limited', (payload) => {
 });
 
 socket.on('chat:banned', () => {
-  addSystemMessage('You have been temporarily banned due to multiple reports.');
+  showWaitingState('You have been temporarily banned due to multiple reports.');
   setStatusWaiting();
   inputEl.disabled = true;
   sendBtnEl.disabled = true;
@@ -153,7 +163,7 @@ skipBtnEl.addEventListener('click', () => {
   if (!confirmed) return;
 
   socket.emit('chat:skip');
-  addSystemMessage('Skipping current chat. Looking for a new partner...');
+  showWaitingState('Skipping current chat. Looking for a new partner...');
   setStatusWaiting();
 });
 
@@ -165,8 +175,6 @@ reportBtnEl.addEventListener('click', () => {
   if (!confirmed) return;
 
   socket.emit('chat:report');
-  addSystemMessage(
-    'You reported your partner. We are reviewing and finding you a new partner...'
-  );
+  showWaitingState('You reported your partner. We are reviewing and finding you a new partner...');
 });
 
